@@ -1,0 +1,68 @@
+target-version = "py314"
+line-length = 88
+indent-width = 4
+src = [".", "tests"]
+extend-exclude = ["build", "dist"]
+output-format = "concise"
+
+[lint]
+# Opt-out strategy: enable everything, then disable what conflicts or is noisy.
+select = ["ALL"]
+ignore = [
+    "D105",   
+    "D102", 
+    "D100",   # missing module docstring
+    "D104",   # missing package docstring
+    "D203",   # conflicts with D211
+    "D213",   # conflicts with D212
+    "COM812", # conflicts with the formatter
+    "ISC001", # conflicts with the formatter
+    "CPY001", # no copyright header required
+    "E501",   # line length is handled by the formatter
+    "TD002",  # TODO author
+    "TD003",  # TODO issue link
+    "FIX002", # TODO comments are allowed
+]
+fixable = ["ALL"]
+unfixable = [
+    "F841", # don't silently delete unused variables
+    "ERA001", # don't silently delete commented-out code
+]
+task-tags = ["TODO", "FIXME", "XXX"]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # assert is fine in tests
+    "PLR2004", # magic values
+    "D",       # docstrings
+    "ANN",     # annotations
+    "SLF001",  # private member access
+]
+"**/__main__.py" = [
+    "T201", # print allowed in entry points
+]
+
+[lint.isort]
+known-first-party = ["aargs", "aggregators", "predicates", "timeseries"]
+combine-as-imports = true
+split-on-trailing-comma = true
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.flake8-type-checking]
+strict = true
+
+[lint.pylint]
+max-args = 6
+
+[lint.mccabe]
+max-complexity = 10
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+docstring-code-line-length = "dynamic"

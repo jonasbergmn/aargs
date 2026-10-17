@@ -1,0 +1,26 @@
+[environment]
+# python-version is inferred from `requires-python` in pyproject.toml
+python = ".venv"
+
+[src]
+exclude = ["build", "dist", "**/__pycache__"]
+
+[terminal]
+output-format = "concise"
+error-on-warning = true
+
+[rules]
+# Promote useful warn-level rules to errors
+possibly-missing-import = "error"
+possibly-unresolved-reference = "error"
+index-out-of-bounds = "error"
+unresolved-attribute = "error"
+unused-ignore-comment = "warn"
+redundant-cast = "error"
+division-by-zero = "error"
+
+[[overrides]]
+include = ["tests/**"]
+
+[overrides.rules]
+unresolved-attribute = "warn"

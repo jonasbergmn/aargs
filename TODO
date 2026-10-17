@@ -1,0 +1,2 @@
+1. Guard against complexe types or any non-value types 
+2. Check that is is garbage collected after use 
