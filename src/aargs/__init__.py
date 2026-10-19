@@ -1,3 +1,3 @@
-from aargs.aargs import arg, Aargs
+from aargs.aargs import Aargs, arg
 
-__all__ = ["arg", "Aargs"]
+__all__ = ["Aargs", "arg"]
