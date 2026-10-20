@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sys
 from dataclasses import MISSING, dataclass, field, fields
-from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints
 from types import UnionType
+from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -47,11 +47,25 @@ class Aargs:
         return bool("--help" in raw_args or "-h" in raw_args)
 
     @classmethod
+    def _field_keys(cls, f: Field[Any]) -> tuple[str, ...]:
+        return f.metadata.get("keys") or (f"--{f.name.replace('_', '-')}",)
+
+    @classmethod
+    def _get_converter(cls, annotation: Any) -> Any:  # noqa: ANN401
+        converter = annotation
+        if isinstance(converter, UnionType):
+            non_none = [t for t in converter.__args__ if t is not type(None)]
+            converter = non_none[0] if non_none else str
+        if converter is bool:
+            return _str_to_bool
+        return converter
+
+    @classmethod
     def render_help(cls) -> None:
         rows = [
             (
-                f"Keys=[{','.join(f.metadata['keys'])}]",
-                f"desc={f.metadata['description']}",
+                f"Keys=[{','.join(cls._field_keys(f))}]",
+                f"desc={f.metadata.get('description', '')}",
                 f"default={f.default}",
                 f"type={f.type}",
             )
@@ -84,37 +98,44 @@ class Aargs:
             cls.render_help()
             raise sys.exit(None)
 
-        # Gather all valid flags across all fields to prevent flag-eating
-        all_flags = {
-            k
-            for f in fields(cls)
-            for k in (f.metadata.get("keys") or (f"--{f.name.replace('_', '-')}",))
+        flag_to_field: dict[str, Field[Any]] = {
+            k: f for f in fields(cls) for k in cls._field_keys(f)
         }
 
-        for f in fields(cls):
-            # Default to "--field-name" if no explicit keys were provided
-            keys = f.metadata.get("keys") or (f"--{f.name.replace('_', '-')}",)
-            converter = type_hints.get(f.name, str)
-
-            if converter is bool:
-                converter = _str_to_bool
-
-            for key in keys:
-                if key in raw_args:
-                    idx = raw_args.index(key) + 1
-                    if idx >= len(raw_args) or raw_args[idx] in all_flags:
-                        msg = f"Missing value for argument: {key}"
-                        raise ValueError(msg)
-                    try:
-                        parsed_kwargs[f.name] = converter(raw_args[idx])
-                    except ValueError as err:
-                        msg = f"Invalid value '{raw_args[idx]}' for {key}: expected {converter.__name__}"
-                        raise ValueError(msg) from err
-                    break
-            else:
-                if cls.is_required(f):
-                    msg = f"Did not find required argument: {', '.join(keys)}"
+        i = 0
+        while i < len(raw_args):
+            token = raw_args[i]
+            if token in flag_to_field:
+                key = token
+                f = flag_to_field[key]
+                if i + 1 >= len(raw_args) or raw_args[i + 1] in flag_to_field:
+                    msg = f"Missing value for argument: {key}"
                     raise ValueError(msg)
+                raw_val = raw_args[i + 1]
+                i += 2
+            elif "=" in token:
+                key, raw_val = token.split("=", 1)
+                if key not in flag_to_field:
+                    msg = f"Unknown argument: {key}"
+                    raise ValueError(msg)
+                f = flag_to_field[key]
+                i += 1
+            else:
+                msg = f"Unknown argument: {token}"
+                raise ValueError(msg)
+
+            converter = cls._get_converter(type_hints.get(f.name, str))
+            try:
+                parsed_kwargs[f.name] = converter(raw_val)
+            except ValueError as err:
+                msg = f"Invalid value '{raw_val}' for {key}: expected {converter.__name__}"
+                raise ValueError(msg) from err
+
+        for f in fields(cls):
+            if f.name not in parsed_kwargs and cls.is_required(f):
+                keys = cls._field_keys(f)
+                msg = f"Did not find required argument: {', '.join(keys)}"
+                raise ValueError(msg)
 
         return cls(**parsed_kwargs)
 
