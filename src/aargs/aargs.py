@@ -3,12 +3,22 @@ from __future__ import annotations
 import sys
 from dataclasses import MISSING, dataclass, field, fields
 from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints
+from types import UnionType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from dataclasses import Field
 
 T = TypeVar("T", bound="Aargs")
+
+
+def _str_to_bool(v: str) -> bool:
+    if v.lower() == "true" or v == "1":
+        return True
+    if v.lower() == "false" or v == "0":
+        return False
+    msg = "Only true, false, True, False, 1, 0 are valid"
+    raise ValueError(msg)
 
 
 def arg(
@@ -85,6 +95,9 @@ class Aargs:
             # Default to "--field-name" if no explicit keys were provided
             keys = f.metadata.get("keys") or (f"--{f.name.replace('_', '-')}",)
             converter = type_hints.get(f.name, str)
+
+            if converter is bool:
+                converter = _str_to_bool
 
             for key in keys:
                 if key in raw_args:
