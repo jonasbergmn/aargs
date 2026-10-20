@@ -8,7 +8,6 @@ import pytest
 
 from aargs import Aargs, arg
 
-
 # ---------------------------------------------------------------------------
 # Basic Dataclass & Parsing Behavior
 # ---------------------------------------------------------------------------
@@ -75,7 +74,7 @@ def test_parse_uses_sys_argv_when_argv_is_none(monkeypatch: pytest.MonkeyPatch) 
 
 def test_parse_custom_type_converter() -> None:
     class Config(Aargs):
-        path: Path = arg("--path", "-p", default=Path("."))
+        path: Path = arg("--path", "-p", default=Path())
 
     config = Config.parse(["-p", "/tmp/example.txt"])
     assert config.path == Path("/tmp/example.txt")

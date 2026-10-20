@@ -12,6 +12,6 @@ class AppConfig(Aargs):
 if __name__ == "__main__":
     config = AppConfig.parse()
 
-    print(f"Name: {config.name} (type: {type(config.name).__name__})")  # noqa: T201
-    print(f"Age: {config.age} (type: {type(config.age).__name__})")  # noqa: T201
-    print(f"Age: {config.size} (type: {type(config.size).__name__})")  # noqa: T201
+    print(f"Name: {config.name} (type: {type(config.name).__name__})")
+    print(f"Age: {config.age} (type: {type(config.age).__name__})")
+    print(f"Age: {config.size} (type: {type(config.size).__name__})")

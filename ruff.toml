@@ -9,8 +9,7 @@ output-format = "concise"
 # Opt-out strategy: enable everything, then disable what conflicts or is noisy.
 select = ["ALL"]
 ignore = [
-    "D105",   
-    "D102", 
+    "D105",
     "D100",   # missing module docstring
     "D104",   # missing package docstring
     "D203",   # conflicts with D211
@@ -33,10 +32,16 @@ task-tags = ["TODO", "FIXME", "XXX"]
 [lint.per-file-ignores]
 "tests/**" = [
     "S101",    # assert is fine in tests
+    "S104",    # binding to all interfaces in test data
+    "S108",    # temp paths in test data
     "PLR2004", # magic values
     "D",       # docstrings
     "ANN",     # annotations
     "SLF001",  # private member access
+]
+"examples/**" = [
+    "INP001",  # standalone example scripts
+    "T201",    # print allowed in examples
 ]
 "**/__main__.py" = [
     "T201", # print allowed in entry points
